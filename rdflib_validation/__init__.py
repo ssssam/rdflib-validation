@@ -47,20 +47,26 @@ def validate_object_properties(data, schema):
     properties = schema[:rdflib.RDF.type:rdflib.OWL.ObjectProperty]
     # Find every triple that specifies that property.
     for prop in properties:
-        prop_range = schema[prop:rdflib.RDFS.range:]
-        prop_domain = schema[prop:rdflib.RDFS.domain:]
+        prop_range = set(schema[prop:rdflib.RDFS.range:])
+        prop_domain = set(schema[prop:rdflib.RDFS.domain:])
 
         # FIXME: what if there is no range or domain defined?
 
         subject_object_pairs = data[:prop:]
         for resource, value in subject_object_pairs:
-            if resource not in prop_range:
-                result.append(RangeMismatch())
-            if value not in prop_domain:
-                result.append(DomainMismatch())
+            # FIXME: this needs to take into account subclassing, too
+            # ... e.g if the range is Foo and bar is an instance of a
+            # subclass of Foo then you are OK!
 
-        print list(subject_object_pairs)
-    # Check the domain and range.
+            resource_classes = set(data[resource:rdflib.RDF.type:])
+            resource_classes.update(schema[resource:rdflib.RDF.type:])
+            value_classes = set(data[value:rdflib.RDF.type:])
+            value_classes.update(schema[value:rdflib.RDF.type:])
+
+            if not prop_domain.intersection(resource_classes):
+                result.append(DomainMismatch())
+            if not prop_range.intersection(value_classes):
+                result.append(RangeMismatch())
 
     return result
 
