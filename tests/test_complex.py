@@ -30,6 +30,9 @@ import rdflib_validation
 from rdflib_validation import (
     DisjointClassMembership, DomainMismatch, RangeMismatch)
 
+from base import ValidationTestCase
+import test_basic
+
 
 # This is boilerplate that gets prepended to every test case before parsing.
 STANDARD_PREFIXES = '''
@@ -44,5 +47,47 @@ class TestPropertiesWithNoDomainOrRange(object):
     pass
 
 
-class TestPropertyDomainAndRangeThroughSubclassing(object):
+class TestObjectPropertiesWithSubclassing(ValidationTestCase):
+    '''See test_basic.TestObjectProperties for the basic axiom.
+
+    Validation should take the class heirarchy into account when checking if a
+    resource is valid within the domain or range of a property.
+
+    '''
+
+    SCHEMA = test_basic.TestObjectProperties.SCHEMA + '''
+    :ClassAsubclass a owl:Class ;
+        rdfs:subClassOf :classA .
+    :ClassBsubclass a owl:Class ;
+        rdfs:subClassOf :classB .
+
+    :instanceAA1 a :ClassAsubclass .
+    :instanceBB1 a :ClassBsubclass.
+    '''
+
+    TESTCASES = {
+        ''':instanceAA1 :relatedTo :instanceAA1 .''':
+            [RangeMismatch],
+        ''':instanceAA1 :relatedTo :instanceBB1 .''':
+            [DomainMismatch],
+        ''':instanceAA1 :relatedTo :instanceBB1 .''':
+            []
+    }
+
+    @pytest.mark.parametrize("data,expected", TESTCASES.items())
+    def test_all(self, data, expected):
+        # FIXME: parsing the schema each time is dumb. Use a fixture.
+        data_graph = rdflib.Graph()
+        data_graph.parse(data=STANDARD_PREFIXES + data, format='turtle')
+
+        schema_graph = rdflib.Graph()
+        schema_graph.parse(data=STANDARD_PREFIXES + self.SCHEMA, format='turtle')
+
+        results = rdflib_validation.validate(data_graph, schema_graph)
+
+        results_classes = set(type(x) for x in results)
+        self.assert_result(data, results_classes, expected)
+
+
+class TestPropertyDomainAndRangeThroughSubproperties(object):
     pass

@@ -16,6 +16,8 @@ import rdflib_validation
 from rdflib_validation import (
     DisjointClassMembership, DomainMismatch, RangeMismatch)
 
+from base import ValidationTestCase
+
 
 # This is boilerplate that gets prepended to every test case before parsing.
 STANDARD_PREFIXES = '''
@@ -27,17 +29,12 @@ STANDARD_PREFIXES = '''
 '''
 
 
-class ValidationTestCase(object):
-    '''Base class for validation test cases.'''
-    pass
-
-
 class TestObjectProperties(ValidationTestCase):
     '''Tests for validation of property statements between two resources.'''
 
     SCHEMA = '''
-    :classA a owl:Class .
-    :classB a owl:Class .
+    :ClassA a owl:Class .
+    :ClassB a owl:Class .
 
     :relatedTo a owl:ObjectProperty ;
         rdfs:comment """
@@ -46,11 +43,11 @@ class TestObjectProperties(ValidationTestCase):
             Imagine a :livesIn property between a person and a building.
             You might live in a house, but the house cannot live in you.
         """ ;
-        rdfs:domain :classA ;
-        rdfs:range :classB .
+        rdfs:domain :ClassA ;
+        rdfs:range :ClassB .
 
-    :instanceA1 a :classA .
-    :instanceB1 a :classB.
+    :instanceA1 a :ClassA .
+    :instanceB1 a :ClassB.
     '''
 
     TESTCASES = {
@@ -72,9 +69,9 @@ class TestObjectProperties(ValidationTestCase):
         schema_graph.parse(data=STANDARD_PREFIXES + self.SCHEMA, format='turtle')
 
         results = rdflib_validation.validate(data_graph, schema_graph)
-        assert results == expected
 
-
+        results_classes = set(type(x) for x in results)
+        self.assert_result(data, results_classes, expected)
 
 
 class TestDatatypeProperties(object):
