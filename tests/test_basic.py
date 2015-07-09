@@ -102,6 +102,13 @@ class TestDisjointClasses(object):
             [DisjointClassMembership],
         ''':instance a :classA.''':
             [],
+        # Test classes that should be implicitly disjoint as well.
+        # FIXME: test that these are indeed invalid statements, using the
+        # Apache Jena owlReasoner.validate() code.
+        ''':instance a :classA, xsd:integer.''':
+            [DisjointClassMembership],
+        ''':instance a :classA, xsd:integer.''':
+            [DisjointClassMembership],
     }
 
 

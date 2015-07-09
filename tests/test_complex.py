@@ -57,9 +57,9 @@ class TestObjectPropertiesWithSubclassing(ValidationTestCase):
 
     SCHEMA = test_basic.TestObjectProperties.SCHEMA + '''
     :ClassAsubclass a owl:Class ;
-        rdfs:subClassOf :classA .
+        rdfs:subClassOf :ClassA .
     :ClassBsubclass a owl:Class ;
-        rdfs:subClassOf :classB .
+        rdfs:subClassOf :ClassB .
 
     :instanceAA1 a :ClassAsubclass .
     :instanceBB1 a :ClassBsubclass.
